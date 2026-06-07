@@ -15,23 +15,23 @@ export function WalletAddress() {
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="glass-card flex items-center gap-2.5 px-4 py-2 rounded-xl border border-emerald-500/20">
-        <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse" />
-        <span className="font-mono-address text-sm text-slate-300 tracking-wide">
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cyan-500/[0.12] bg-[#071829]/50 backdrop-blur-md">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_#34d399]" />
+        <span className="font-mono-address text-[13px] text-slate-300">
           {formatAddress(address)}
         </span>
         <button
           onClick={handleCopy}
-          className="text-slate-500 hover:text-slate-200 transition-colors ml-0.5"
-          title={copied ? 'Copied!' : 'Copy full address'}
+          className="text-slate-600 hover:text-slate-300 transition-colors ml-0.5"
+          title={copied ? 'Copied!' : 'Copy address'}
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
         </button>
       </div>
       <button
         onClick={disconnect}
-        className="text-xs text-slate-500 hover:text-red-400 transition-colors"
+        className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
       >
         Disconnect
       </button>
@@ -41,7 +41,7 @@ export function WalletAddress() {
 
 function CopyIcon() {
   return (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -54,7 +54,7 @@ function CopyIcon() {
 
 function CheckIcon() {
   return (
-    <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
     </svg>
   )

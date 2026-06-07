@@ -4,4 +4,5 @@ export interface WalletState {
   address: string | null
   status: WalletStatus
   error: string | null
+  balance: string | null
 }

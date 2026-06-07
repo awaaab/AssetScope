@@ -5,6 +5,7 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { BrowserProvider, formatEther } from 'ethers'
 import type { WalletState } from '../types/wallet'
 import { isMetaMaskInstalled } from '../lib/ethereum'
 
@@ -19,20 +20,32 @@ const INITIAL_STATE: WalletState = {
   address: null,
   status: 'disconnected',
   error: null,
+  balance: null,
 }
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<WalletState>(INITIAL_STATE)
 
-  // Keep state in sync when the user switches or disconnects accounts in MetaMask.
+  const fetchBalance = useCallback(async (address: string) => {
+    try {
+      const provider = new BrowserProvider(window.ethereum!)
+      const raw = await provider.getBalance(address)
+      const formatted = parseFloat(formatEther(raw)).toFixed(4)
+      setState(prev => ({ ...prev, balance: formatted }))
+    } catch {
+      setState(prev => ({ ...prev, balance: null }))
+    }
+  }, [])
+
   const handleAccountsChanged = useCallback((rawAccounts: unknown) => {
     const accounts = rawAccounts as string[]
     if (accounts.length === 0) {
       setState(INITIAL_STATE)
     } else {
-      setState({ address: accounts[0], status: 'connected', error: null })
+      setState({ address: accounts[0], status: 'connected', error: null, balance: null })
+      fetchBalance(accounts[0])
     }
-  }, [])
+  }, [fetchBalance])
 
   useEffect(() => {
     window.ethereum?.on('accountsChanged', handleAccountsChanged)
@@ -43,11 +56,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const connect = async () => {
     if (!isMetaMaskInstalled()) {
-      setState(prev => ({
-        ...prev,
-        status: 'error',
-        error: 'MetaMask is not installed.',
-      }))
+      setState(prev => ({ ...prev, status: 'error', error: 'MetaMask is not installed.' }))
       return
     }
 
@@ -57,10 +66,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const accounts = (await window.ethereum!.request({
         method: 'eth_requestAccounts',
       })) as string[]
-      setState({ address: accounts[0], status: 'connected', error: null })
+      setState({ address: accounts[0], status: 'connected', error: null, balance: null })
+      fetchBalance(accounts[0])
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Connection rejected.'
-      setState({ address: null, status: 'error', error: message })
+      setState({ address: null, status: 'error', error: message, balance: null })
     }
   }
 
