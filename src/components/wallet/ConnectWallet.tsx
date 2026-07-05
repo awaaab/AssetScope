@@ -1,4 +1,5 @@
-import { useWallet } from '../../context/WalletContext'
+import { NO_WALLET_ERROR } from '../../lib/ethereum'
+import { useWallet } from '../../context/useWallet'
 
 export function ConnectWallet() {
   const { status, error, connect } = useWallet()
@@ -25,9 +26,9 @@ export function ConnectWallet() {
 
       {status === 'error' && error && (
         <p className="text-xs text-red-400 text-center max-w-xs leading-relaxed">
-          {error.includes('MetaMask is not installed') ? (
+          {error === NO_WALLET_ERROR ? (
             <>
-              MetaMask not detected.{' '}
+              No wallet detected.{' '}
               <a
                 href="https://metamask.io/download/"
                 target="_blank"

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useWallet } from './context/WalletContext'
+import { chainName } from './lib/ethereum'
+import { useWallet } from './context/useWallet'
 import { ConnectWallet } from './components/wallet/ConnectWallet'
 import { WalletAddress } from './components/wallet/WalletAddress'
 
@@ -58,7 +59,7 @@ function DisconnectedHero() {
 }
 
 function ConnectedView() {
-  const { balance } = useWallet()
+  const { balance, chainId } = useWallet()
   const [flashKey, setFlashKey] = useState(0)
   const prevBalance = useRef<string | null>(null)
 
@@ -105,7 +106,7 @@ function ConnectedView() {
       <div className="rounded-xl border border-cyan-500/[0.1] bg-[#071829]/50 backdrop-blur-md px-5 py-4 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-slate-300">Token Balances</p>
-          <p className="text-[11px] text-slate-600 mt-0.5">On-chain · Ethereum mainnet</p>
+          <p className="text-[11px] text-slate-600 mt-0.5">On-chain · {chainName(chainId)}</p>
         </div>
         <span className="text-[11px] text-cyan-400 bg-cyan-500/[0.08] border border-cyan-500/[0.15] rounded-full px-2.5 py-1 font-medium">
           Milestone 4

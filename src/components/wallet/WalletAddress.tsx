@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { formatAddress } from '../../lib/ethereum'
-import { useWallet } from '../../context/WalletContext'
+import { useWallet } from '../../context/useWallet'
 
 export function WalletAddress() {
   const { address, disconnect } = useWallet()
@@ -9,9 +9,13 @@ export function WalletAddress() {
   if (!address) return null
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(address)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(address)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard access denied — leave the icon unchanged.
+    }
   }
 
   return (
