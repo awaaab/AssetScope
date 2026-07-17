@@ -20,14 +20,14 @@ export function WalletAddress() {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cyan-500/[0.12] bg-[#071829]/50 backdrop-blur-md">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_#34d399]" />
-        <span className="font-mono-address text-[13px] text-slate-300">
+      <div className="glass flex items-center gap-2 px-3 py-1.5 rounded-lg">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        <span className="font-mono-address text-[13px] text-neutral-300">
           {formatAddress(address)}
         </span>
         <button
           onClick={handleCopy}
-          className="text-slate-600 hover:text-slate-300 transition-colors ml-0.5"
+          className="text-neutral-500 hover:text-neutral-200 transition-colors ml-0.5"
           title={copied ? 'Copied!' : 'Copy address'}
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
@@ -35,7 +35,7 @@ export function WalletAddress() {
       </div>
       <button
         onClick={disconnect}
-        className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+        className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
       >
         Disconnect
       </button>

@@ -9,7 +9,7 @@ export function ConnectWallet() {
       <button
         onClick={connect}
         disabled={status === 'connecting'}
-        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-all duration-150 shadow-[0_0_0_1px_rgba(6,182,212,0.4)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.35)]"
+        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-neutral-950 text-sm font-medium transition-colors duration-150 hover:bg-neutral-200 active:bg-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {status === 'connecting' ? (
           <>
@@ -25,7 +25,7 @@ export function ConnectWallet() {
       </button>
 
       {status === 'error' && error && (
-        <p className="text-xs text-red-400 text-center max-w-xs leading-relaxed">
+        <p className="text-xs text-red-400/90 text-center max-w-xs leading-relaxed">
           {error === NO_WALLET_ERROR ? (
             <>
               No wallet detected.{' '}
