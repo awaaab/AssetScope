@@ -21,7 +21,6 @@ export function WalletAddress() {
   return (
     <div className="flex items-center gap-2">
       <div className="glass flex items-center gap-2 px-3 py-1.5 rounded-lg">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
         <span className="font-mono-address text-[13px] text-neutral-300">
           {formatAddress(address)}
         </span>

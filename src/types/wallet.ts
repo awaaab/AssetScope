@@ -5,5 +5,6 @@ export interface WalletState {
   status: WalletStatus
   error: string | null
   balance: string | null
+  balanceRaw: bigint | null
   chainId: string | null
 }

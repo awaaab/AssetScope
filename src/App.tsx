@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { chainName } from './lib/ethereum'
 import { useWallet } from './context/useWallet'
+import { useTokenBalances } from './hooks/useTokenBalances'
+import { useMarketPrices } from './hooks/useMarketPrices'
+import { formatUsd, portfolioTotalUsd, valueEth, valueToken } from './lib/portfolio'
 import { ConnectWallet } from './components/wallet/ConnectWallet'
 import { WalletAddress } from './components/wallet/WalletAddress'
+import { TokenBalances } from './components/tokens/TokenBalances'
 
 export default function App() {
   const { status } = useWallet()
@@ -20,9 +23,6 @@ export default function App() {
       <nav className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/[0.06] bg-white/[0.01] backdrop-blur-xl">
         <div className="flex items-baseline gap-2.5">
           <span className="text-sm font-medium text-neutral-100 tracking-tight">AssetScope</span>
-          <span className="text-[10px] text-neutral-600 font-mono tracking-widest uppercase select-none">
-            beta
-          </span>
         </div>
 
         {isConnected && <WalletAddress />}
@@ -61,7 +61,9 @@ function DisconnectedHero() {
 }
 
 function ConnectedView() {
-  const { balance, chainId } = useWallet()
+  const { balance, balanceRaw } = useWallet()
+  const tokenState = useTokenBalances()
+  const priceState = useMarketPrices(tokenState.tokens, tokenState.status === 'ready')
   const [flashKey, setFlashKey] = useState(0)
   const prevBalance = useRef<string | null>(null)
 
@@ -71,6 +73,12 @@ function ConnectedView() {
       prevBalance.current = balance
     }
   }, [balance])
+
+  const ethValue = valueEth(balanceRaw, priceState.ethUsd)
+  const tokenValues = tokenState.tokens.map(token =>
+    valueToken(token, priceState.tokenUsdByAddress[token.address.toLowerCase()] ?? null).valueUsd,
+  )
+  const totalValue = portfolioTotalUsd([ethValue.valueUsd, ...tokenValues])
 
   return (
     <div className="w-full max-w-xl flex flex-col gap-3">
@@ -86,12 +94,24 @@ function ConnectedView() {
             <span className="text-neutral-500 text-2xl font-medium ml-2">ETH</span>
           </p>
         )}
-        <p className="text-xs text-neutral-600 mt-2.5">USD value available in milestone 5</p>
+        <EthValue pricesStatus={priceState.status} ethPrice={ethValue.priceUsd} ethValue={ethValue.valueUsd} />
+      </div>
+
+      <div className="glass rounded-xl px-5 py-4 flex items-center justify-between">
+        <div>
+          <p className="text-[11px] text-neutral-500 uppercase tracking-widest font-medium">Portfolio Value</p>
+          <p className="text-xl font-medium text-neutral-100 mt-1">
+            {priceState.status === 'ready' ? formatUsd(totalValue) : '—'}
+          </p>
+        </div>
+        <p className="text-[11px] text-neutral-500">
+          {priceState.status === 'loading' ? 'Loading USD prices...' : 'USD'}
+        </p>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Tokens', value: '—' },
+          { label: 'Tokens', value: tokenState.status === 'ready' ? String(tokenState.tokens.length) : '—' },
           { label: 'Networks', value: '—' },
           { label: '24h Change', value: '—' },
         ].map(({ label, value }) => (
@@ -105,15 +125,28 @@ function ConnectedView() {
         ))}
       </div>
 
-      <div className="glass rounded-xl px-5 py-4 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-neutral-100">Token Balances</p>
-          <p className="text-[11px] text-neutral-500 mt-0.5">On-chain · {chainName(chainId)}</p>
-        </div>
-        <span className="text-[11px] text-neutral-400 border border-white/[0.08] rounded-md px-2 py-1 font-medium">
-          Milestone 4
-        </span>
-      </div>
+      {priceState.status === 'error' && (
+        <p className="text-xs text-amber-300/80 px-1">{priceState.error} On-chain balances are still up to date.</p>
+      )}
+      {priceState.status === 'unsupported' && (
+        <p className="text-xs text-neutral-500 px-1">USD prices are currently available for Ethereum mainnet assets only.</p>
+      )}
+
+      <TokenBalances {...tokenState} prices={priceState} />
     </div>
   )
+}
+
+function EthValue({
+  pricesStatus,
+  ethPrice,
+  ethValue,
+}: {
+  pricesStatus: ReturnType<typeof useMarketPrices>['status']
+  ethPrice: number | null
+  ethValue: number | null
+}) {
+  if (pricesStatus === 'loading') return <p className="text-xs text-neutral-600 mt-2.5">Loading USD price...</p>
+  if (pricesStatus !== 'ready') return <p className="text-xs text-neutral-600 mt-2.5">USD value unavailable</p>
+  return <p className="text-xs text-neutral-500 mt-2.5">{formatUsd(ethPrice)} per ETH · {formatUsd(ethValue)}</p>
 }

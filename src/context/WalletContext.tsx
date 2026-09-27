@@ -15,6 +15,7 @@ const INITIAL_STATE: WalletState = {
   status: 'disconnected',
   error: null,
   balance: null,
+  balanceRaw: null,
   chainId: null,
 }
 
@@ -42,12 +43,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       // so a slow response can't show one account's balance under another.
       setState(prev =>
         fetchId === fetchIdRef.current && prev.address === address
-          ? { ...prev, balance: formatted }
+          ? { ...prev, balance: formatted, balanceRaw: raw }
           : prev,
       )
     } catch {
       setState(prev =>
-        fetchId === fetchIdRef.current ? { ...prev, balance: null } : prev,
+        fetchId === fetchIdRef.current ? { ...prev, balance: null, balanceRaw: null } : prev,
       )
     }
   }, [])
@@ -76,6 +77,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         status: 'connected',
         error: null,
         balance: null,
+        balanceRaw: null,
       }))
       fetchBalance(accounts[0])
     }
@@ -83,7 +85,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const handleChainChanged = useCallback((rawChainId: unknown) => {
     if (!activeRef.current) return
-    setState(prev => ({ ...prev, chainId: rawChainId as string, balance: null }))
+    setState(prev => ({ ...prev, chainId: rawChainId as string, balance: null, balanceRaw: null }))
     if (addressRef.current) fetchBalance(addressRef.current)
   }, [fetchBalance])
 
@@ -121,6 +123,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         status: 'connected',
         error: null,
         balance: null,
+        balanceRaw: null,
         chainId: null,
       })
       fetchBalance(accounts[0])
