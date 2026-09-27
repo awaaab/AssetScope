@@ -1,79 +1,55 @@
-import { useEffect, useRef, useState } from 'react'
 import { useWallet } from './context/useWallet'
 import { useTokenBalances } from './hooks/useTokenBalances'
 import { useMarketPrices } from './hooks/useMarketPrices'
 import { formatUsd, portfolioTotalUsd, valueEth, valueToken } from './lib/portfolio'
+import { chainName } from './lib/ethereum'
 import { ConnectWallet } from './components/wallet/ConnectWallet'
 import { WalletAddress } from './components/wallet/WalletAddress'
 import { TokenBalances } from './components/tokens/TokenBalances'
 
 export default function App() {
   const { status } = useWallet()
-  const isConnected = status === 'connected'
 
   return (
-    <div className="relative min-h-screen bg-[#0a0a0a] text-neutral-200 flex flex-col overflow-hidden">
-      {/* Single neutral light source + grain — enough for the glass to read */}
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute left-1/2 -top-64 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-white/[0.035] blur-[120px]" />
-        <div className="noise absolute inset-0" />
-      </div>
-
-      {/* Navbar */}
-      <nav className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/[0.06] bg-white/[0.01] backdrop-blur-xl">
-        <div className="flex items-baseline gap-2.5">
-          <span className="text-sm font-medium text-neutral-100 tracking-tight">AssetScope</span>
+    <div className="min-h-screen bg-[#0b0d12] text-[#e8eaed]">
+      <header className="border-b border-white/[0.08] bg-[#0b0d12]/95">
+        <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <span className="grid size-7 place-items-center rounded-md border border-white/[0.12] bg-white/[0.06] text-[9px] font-semibold tracking-[-0.08em] text-white">
+              AS
+            </span>
+            <span className="text-sm font-semibold tracking-[-0.01em] text-white">AssetScope</span>
+          </div>
+          {status === 'connected' && <WalletAddress />}
         </div>
+      </header>
 
-        {isConnected && <WalletAddress />}
-      </nav>
-
-      {/* Main */}
-      <main className="relative z-10 flex flex-col items-center justify-center flex-1 px-4 py-12">
-        {!isConnected ? <DisconnectedHero /> : <ConnectedView />}
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+        {status === 'connected' ? <ConnectedView /> : <DisconnectedView />}
       </main>
     </div>
   )
 }
 
-function DisconnectedHero() {
+function DisconnectedView() {
   return (
-    <div className="max-w-lg w-full text-center flex flex-col items-center gap-5">
-      <p className="text-[11px] text-neutral-500 tracking-widest uppercase font-medium">
-        Ethereum Portfolio Tracker
+    <section className="mx-auto mt-[12vh] w-full max-w-md rounded-xl border border-white/[0.1] bg-[#12151c] p-6 shadow-[0_16px_40px_-28px_rgba(0,0,0,0.9)] sm:p-8">
+      <p className="text-xs font-medium text-[#9aa1ad]">Portfolio overview</p>
+      <h1 className="mt-3 text-2xl font-semibold tracking-[-0.025em] text-white">Connect your wallet</h1>
+      <p className="mt-2 max-w-sm text-sm leading-6 text-[#9aa1ad]">
+        View your Ethereum balance, supported assets, and current USD value.
       </p>
-
-      <h1 className="text-5xl md:text-[3.75rem] font-bold tracking-[-0.025em] text-neutral-50 leading-[1.06]">
-        Track every asset.<br />
-        <span className="text-neutral-600">Know your worth.</span>
-      </h1>
-
-      <p className="text-neutral-500 text-[15px] leading-relaxed max-w-xs">
-        Connect your MetaMask wallet for a real-time view of token balances and portfolio value.
-      </p>
-
-      <div className="flex flex-col items-center gap-2.5 mt-1">
+      <div className="mt-6 border-t border-white/[0.08] pt-5">
         <ConnectWallet />
-        <p className="text-[11px] text-neutral-600">Non-custodial · Read-only access</p>
       </div>
-    </div>
+    </section>
   )
 }
 
 function ConnectedView() {
-  const { balance, balanceRaw } = useWallet()
+  const { balance, balanceRaw, chainId } = useWallet()
   const tokenState = useTokenBalances()
   const priceState = useMarketPrices(tokenState.tokens, tokenState.status === 'ready')
-  const [flashKey, setFlashKey] = useState(0)
-  const prevBalance = useRef<string | null>(null)
-
-  useEffect(() => {
-    if (balance !== null && balance !== prevBalance.current) {
-      setFlashKey(k => k + 1)
-      prevBalance.current = balance
-    }
-  }, [balance])
-
   const ethValue = valueEth(balanceRaw, priceState.ethUsd)
   const tokenValues = tokenState.tokens.map(token =>
     valueToken(token, priceState.tokenUsdByAddress[token.address.toLowerCase()] ?? null).valueUsd,
@@ -81,72 +57,55 @@ function ConnectedView() {
   const totalValue = portfolioTotalUsd([ethValue.valueUsd, ...tokenValues])
 
   return (
-    <div className="w-full max-w-xl flex flex-col gap-3">
-      <div className="glass rounded-xl px-6 py-6">
-        <p className="text-[11px] text-neutral-500 uppercase tracking-widest font-medium mb-2.5">
-          ETH Balance
-        </p>
-        {balance === null ? (
-          <div className="h-11 w-40 rounded-md bg-white/[0.05] animate-pulse" />
-        ) : (
-          <p key={flashKey} className="balance-flash text-[2.75rem] font-semibold tracking-tight leading-none text-neutral-50">
-            {balance}
-            <span className="text-neutral-500 text-2xl font-medium ml-2">ETH</span>
-          </p>
-        )}
-        <EthValue pricesStatus={priceState.status} ethPrice={ethValue.priceUsd} ethValue={ethValue.valueUsd} />
-      </div>
-
-      <div className="glass rounded-xl px-5 py-4 flex items-center justify-between">
-        <div>
-          <p className="text-[11px] text-neutral-500 uppercase tracking-widest font-medium">Portfolio Value</p>
-          <p className="text-xl font-medium text-neutral-100 mt-1">
-            {priceState.status === 'ready' ? formatUsd(totalValue) : '—'}
-          </p>
-        </div>
-        <p className="text-[11px] text-neutral-500">
-          {priceState.status === 'loading' ? 'Loading USD prices...' : 'USD'}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: 'Tokens', value: tokenState.status === 'ready' ? String(tokenState.tokens.length) : '—' },
-          { label: 'Networks', value: '—' },
-          { label: '24h Change', value: '—' },
-        ].map(({ label, value }) => (
-          <div
-            key={label}
-            className="glass rounded-xl hover:border-white/[0.13] transition-colors duration-200 cursor-default px-4 py-3.5"
-          >
-            <p className="text-[11px] text-neutral-500 mb-1.5 uppercase tracking-wide">{label}</p>
-            <p className="text-xl font-medium text-neutral-400">{value}</p>
+    <div className="space-y-5 sm:space-y-6">
+      <section className="overflow-hidden rounded-xl border border-white/[0.1] bg-[#12151c]">
+        <div className="px-5 py-6 sm:px-7 sm:py-7">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-medium text-[#9aa1ad]">
+              <span>Portfolio value</span>
+            </div>
+            <PortfolioValue status={priceState.status} totalValue={totalValue} />
+            <p className="mt-2 text-xs text-[#858d99]">
+              {priceState.status === 'ready' ? 'Current market value of priced assets' : 'Market value updates when price data is available'}
+            </p>
+            <p className="mt-1 text-xs text-[#737b88] sm:hidden">{chainName(chainId)}</p>
           </div>
-        ))}
-      </div>
+        </div>
+      </section>
 
       {priceState.status === 'error' && (
-        <p className="text-xs text-amber-300/80 px-1">{priceState.error} On-chain balances are still up to date.</p>
+        <Notice tone="warning">{priceState.error} On-chain balances remain available.</Notice>
       )}
       {priceState.status === 'unsupported' && (
-        <p className="text-xs text-neutral-500 px-1">USD prices are currently available for Ethereum mainnet assets only.</p>
+        <Notice>USD prices are currently available for Ethereum mainnet assets only.</Notice>
       )}
 
-      <TokenBalances {...tokenState} prices={priceState} />
+      <TokenBalances
+        {...tokenState}
+        prices={priceState}
+        ethBalance={balance}
+        ethPrice={priceState.ethUsd}
+        ethValue={ethValue.valueUsd}
+      />
     </div>
   )
 }
 
-function EthValue({
-  pricesStatus,
-  ethPrice,
-  ethValue,
+function PortfolioValue({
+  status,
+  totalValue,
 }: {
-  pricesStatus: ReturnType<typeof useMarketPrices>['status']
-  ethPrice: number | null
-  ethValue: number | null
+  status: ReturnType<typeof useMarketPrices>['status']
+  totalValue: number | null
 }) {
-  if (pricesStatus === 'loading') return <p className="text-xs text-neutral-600 mt-2.5">Loading USD price...</p>
-  if (pricesStatus !== 'ready') return <p className="text-xs text-neutral-600 mt-2.5">USD value unavailable</p>
-  return <p className="text-xs text-neutral-500 mt-2.5">{formatUsd(ethPrice)} per ETH · {formatUsd(ethValue)}</p>
+  if (status === 'loading') return <div className="mt-3 h-10 w-48 animate-pulse rounded bg-white/[0.07]" />
+  return <p className="numeric mt-2 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-[2.15rem]">{formatUsd(totalValue)}</p>
+}
+
+function Notice({ children, tone = 'neutral' }: { children: React.ReactNode; tone?: 'neutral' | 'warning' }) {
+  const styles = tone === 'warning'
+    ? 'border-amber-300/20 bg-amber-300/[0.06] text-amber-100/80'
+    : 'border-white/[0.09] bg-white/[0.03] text-[#aeb4be]'
+
+  return <p className={`rounded-lg border px-3 py-2.5 text-xs leading-5 ${styles}`}>{children}</p>
 }
